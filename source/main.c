@@ -2,27 +2,10 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include "hardware.h"
+#include "structures.h"
 
-/*
- * Structure that defines each body part of the snake with an x and y pixel value
- */
-typedef struct {
-    int x;
-    int y;
-} Position;
-
-/*
- * Structure that defines the whole snake, from list of body parts to size and index of head
- */
-typedef struct {
-    Position *parts;
-    size_t used;
-    size_t size;
-    size_t score;
-    size_t indexOfHead;
-    int direction[2];
-
-} Snake;
+#define WIDTH 10
 
 /*
  * Initialize the snake with initialSize allocating memory and declaring the direction, used, size, and score
@@ -60,31 +43,6 @@ void freeArray(Snake *a) {
     a->used = a->size = 0;
 }
 
-/*
- * Takes in a string and displays it to the center of the LED Display
- */
-void ledDisplayText(char text[])
-{
-    printf("Showing this message on LED: %s\n", text);
-}
-
-/*
- * Read in an integer and use that integer to place correct numbers into each LCD display 1-1000's place
- */
-void lcdDisplay(int num)
-{
-    // set the 1000s spot
-    printf("Display %d to 1000's LCD\n", num / 1000);
-    num = num % 1000;
-    // set the 100's spot
-    printf("Display %d to 100's LCD\n", num / 100);
-    num = num % 100;
-    // set the 10's spot
-    printf("Display %d to 10's LCD\n", num / 10);
-    num = num % 10;
-    // set the 1's spot
-    printf("Display %d to 1's LCD\n", num / 1);
-}
 
 /*
  * Generate a random position and make sure it is within the width and height of screen and not inside snake body
@@ -92,19 +50,22 @@ void lcdDisplay(int num)
 Position generateFood(Snake *snake)
 {
     // set width and height
-    int width = 100;
-    int height = 100;
+    int width = 42;
+    int height = 21;
 
     Position temp;
     int condition = 0;
     while (condition == 0)
     {
         // generate random numbers between width and height
-        temp.x = rand() % width - (width / 2);
-        temp.y = rand() % height - (height / 2);
+        temp.x = rand() % width;
+        temp.y = rand() % height;
+
+
 
         // check to see if it matches any of the positions in the snake body
-        for (int i = 0; i < snake->used; i++)
+        int i = 0;
+        for (i = 0; i < snake->used; i++)
         {
             if(snake->parts[i].x == temp.x && snake->parts[i].y == temp.y)
             {
@@ -165,12 +126,13 @@ void foodUpdate(Snake *snake)
     // iterate through snake body, start at the oldest tail and work toward the head, when you reach head then add the
     // new head on top of it
     int i = 0;
-    for(int j = snake->indexOfHead + 1; j < snake->used; j++)
+    int j;
+    for(j = snake->indexOfHead + 1; j < snake->used; j++)
     {
         temp_parts[i] = snake->parts[j];
         i++;
     }
-    for(int j = 0; j <= snake->indexOfHead ; j++)
+    for(j = 0; j <= snake->indexOfHead ; j++)
     {
         temp_parts[i] = snake->parts[j];
         i++;
@@ -200,17 +162,18 @@ int checkForCollision(Snake *snake, Position food)
     Position temp = generateNewHead(snake);
 
     // check if snake head hit itself or hit a wall
-    for (int i = 0; i < snake->used; i++)
+    int i;
+    for (i = 0; i < snake->used; i++)
     {
         if(snake->parts[i].x == temp.x && snake->parts[i].y == temp.y)
         {
             return 1;
         }
-        else if(temp.x > 50 || temp.x < -50)
+        else if(temp.x > 42 || temp.x < 0)
         {
             return 1;
         }
-        else if(temp.y > 50 || temp.y < -50)
+        else if(temp.y > 21 || temp.y < 0)
         {
             return 1;
         }
@@ -231,39 +194,12 @@ int checkForCollision(Snake *snake, Position food)
 
 }
 
-/*
- * Loop through the snake body and food then place all parts on screen
- */
-void ledDisplayUpdate(Snake *snake, Position food)
-{
-    // for now just print the x and y values of each body part and food
-    for (int i = 0; i < snake->used; i++)
-    {
-        printf("(%d,%d)\n", snake->parts[i].x, snake->parts[i].y);
-        printf("-----------------------\n");
-    }
-    printf("food(x,y): (%d,%d)\n", food.x, food.y);
-    printf("*****************************\n");
-}
-
-/*
- * Check if button 1 has been pressed, if it has return 1, if not return 0
- */
-int checkButton1()
-{
-    return 0;
-}
-
-/*
- * Check if button 2 has been pressed, if it has return 1, if not return 0
- */
-int checkButton2()
-{
-    return 0;
-}
 
 int main()
 {
+    initializeLCDDisplay();
+    initializeUserButton();
+
     // initialize srand
     srand(time(NULL));
 
@@ -280,18 +216,18 @@ int main()
     // TODO: insert the two tails and the head, indexOfHead is equal to 2, the head of the snake
     // Insert the first tail
     Position temp;
-    temp.x = -2;
-    temp.y = 0;
+    temp.x = 10;
+    temp.y = 10;
     insertArray(&snake, temp);
 
     // Insert the second tail
-    temp.x = -1;
-    temp.y = 0;
+    temp.x = 11;
+    temp.y = 10;
     insertArray(&snake, temp);
 
     // Insert the starting head
-    temp.x = 0;
-    temp.y = 0;
+    temp.x = 12;
+    temp.y = 10;
     insertArray(&snake, temp);
 
     // TODO: create a piece of food somewhere on the screen
@@ -330,7 +266,36 @@ int main()
         // TODO: check if either button 1 or button 2 has been pressed, if 1 then turn left, if 2 then turn right
         if(checkButton1() == 1)
         {
-            printf("Turn the snake direction to left");
+            printf("Turn the snake direction left\n");
+
+            // snake is going right, turn left to up
+            if(snake.direction[0] == 1 && snake.direction[1] == 0)
+            {
+                snake.direction[0] = 0;
+                snake.direction[1] = 1;
+            }
+
+            // snake is going up, turn left to left
+            else if(snake.direction[0] == 0 && snake.direction[1] == 1)
+            {
+                snake.direction[0] = -1;
+                snake.direction[1] = 0;
+            }
+
+            // snake is going left, turn left to down
+            else if(snake.direction[0] == -1 && snake.direction[1] == 0)
+            {
+                snake.direction[0] = 0;
+                snake.direction[1] = -1;
+            }
+
+            // snake is going down, turn left to right
+            else if(snake.direction[0] == 0 && snake.direction[1] == -1)
+            {
+                snake.direction[0] = 1;
+                snake.direction[1] = 0;
+            }
+
         }
         else if(checkButton2() == 1)
         {
@@ -339,6 +304,8 @@ int main()
     }
 
     freeArray(&snake);
+    closeLCDScreen();
+    closeUserButton();
 
     return 0;
 }
