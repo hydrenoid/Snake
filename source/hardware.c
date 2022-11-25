@@ -18,6 +18,8 @@
 #include "socal/socal.h"
 #include "socal/hps.h"
 #include "socal/alt_gpio.h"
+#include "address_map_arm.h"
+
 
 #define HW_REGS_BASE ( ALT_STM_OFST )
 #define HW_REGS_SPAN ( 0x04000000 )
@@ -39,23 +41,41 @@ LCD_CANVAS LcdCanvas;
 void *virtual_base_USER_BUTTON;
 int fd_USER_BUTTON;
 uint32_t scan_input;
+volatile int *KEY_ptr;
+
+void * virtual_base;
 
 void initializeUserButton()
 {
-    if ((fd_USER_BUTTON = open("/dev/mem", (O_RDWR | O_SYNC))) == -1) {
-        printf("ERROR: could not open \"/dev/mem\"...\n");
+    if( ( fd_USER_BUTTON = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
+        printf( "ERROR: could not open \"/dev/mem\"...\n" );
+
     }
 
-    virtual_base_USER_BUTTON = mmap(NULL, HW_REGS_SPAN, (PROT_READ | PROT_WRITE), MAP_SHARED, fd_USER_BUTTON, HW_REGS_BASE);
+    virtual_base = mmap( NULL, LW_BRIDGE_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd_USER_BUTTON, LW_BRIDGE_BASE );
 
-    if (virtual_base_USER_BUTTON == MAP_FAILED) {
-        printf("ERROR: mmap() failed...\n");
-        close(fd_USER_BUTTON);
+    if( virtual_base == MAP_FAILED ) {
+        printf( "ERROR: mmap() failed...\n" );
+        close( fd_USER_BUTTON );
+
     }
-    // initialize the pio controller
-    // led: set the direction of the HPS GPIO1 bits attached to LEDs to output
-    alt_setbits_word((virtual_base_USER_BUTTON + ((uint32_t)(ALT_GPIO1_SWPORTA_DDR_ADDR) & (uint32_t)(HW_REGS_MASK))), USER_IO_DIR);
+
+    KEY_ptr = virtual_base + KEY_BASE;
+
+    printf("SUCCESS");
+
+//    int x=0;
+//    for(x=0;x<100;++x){
+//        printf("Keys are: %X\n", *KEY_ptr);
+//        usleep(1*1000000);
+//        *(KEY_ptr + 3) = 0xF;
+//        *(KEY_ptr + 2) = 0xF;
+//        printf("At the End of the For Loop\n");
+//
+//
+//    }
 }
+
 
 
 void closeUserButton()
@@ -164,6 +184,17 @@ void ledDisplayUpdate(Snake *snake, Position food)
     // add the border around the game
     DRAW_Rect(&LcdCanvas, 0,0, LcdCanvas.Width-1, LcdCanvas.Height-1, LCD_BLACK);
 
+    // draw right line to extend right border
+    DRAW_Line(&LcdCanvas, LcdCanvas.Width-2,1, LcdCanvas.Width-2, LcdCanvas.Height-1, LCD_BLACK);
+
+    // draw left line to extend left border
+    DRAW_Line(&LcdCanvas, 1,1, 1, LcdCanvas.Height-1, LCD_BLACK);
+    DRAW_Line(&LcdCanvas, 2,1, 2, LcdCanvas.Height-1, LCD_BLACK);
+
+    // draw top line to extend top border
+    DRAW_Line(&LcdCanvas, 1,1, LcdCanvas.Width-2, 1, LCD_BLACK);
+    DRAW_Line(&LcdCanvas, 1,2, LcdCanvas.Width-2, 2, LCD_BLACK);
+
     // paint the snake on the screen
     int v, z;
 
@@ -227,11 +258,10 @@ void lcdDisplay(int num)
  */
 int checkButton1()
 {
-    scan_input = alt_read_word( ( virtual_base_USER_BUTTON + ( ( uint32_t )(  ALT_GPIO1_EXT_PORTA_ADDR ) & ( uint32_t )( HW_REGS_MASK ) ) ) );
-    //usleep(1000*1000);
-    if(~scan_input&BUTTON_MASK)
+    if(*KEY_ptr == 4)
         return 1;
-    else    return 0;
+    else
+        return 0;
 }
 
 
@@ -240,5 +270,8 @@ int checkButton1()
  */
 int checkButton2()
 {
-    return 0;
+    if(*KEY_ptr == 8)
+        return 1;
+    else
+        return 0;
 }

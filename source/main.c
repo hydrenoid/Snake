@@ -50,8 +50,8 @@ void freeArray(Snake *a) {
 Position generateFood(Snake *snake)
 {
     // set width and height
-    int width = 42;
-    int height = 21;
+    int width = 41;
+    int height = 20;
 
     Position temp;
     int condition = 0;
@@ -169,11 +169,11 @@ int checkForCollision(Snake *snake, Position food)
         {
             return 1;
         }
-        else if(temp.x > 42 || temp.x < 0)
+        else if(temp.x > 41 || temp.x < 1)
         {
             return 1;
         }
-        else if(temp.y > 21 || temp.y < 0)
+        else if(temp.y > 20 || temp.y < 1)
         {
             return 1;
         }
@@ -300,6 +300,33 @@ int main()
         else if(checkButton2() == 1)
         {
             printf("Turn the snake direction to right");
+            // snake is going right, turn right to down
+            if(snake.direction[0] == 1 && snake.direction[1] == 0)
+            {
+                snake.direction[0] = 0;
+                snake.direction[1] = -1;
+            }
+
+                // snake is going up, turn right to right
+            else if(snake.direction[0] == 0 && snake.direction[1] == 1)
+            {
+                snake.direction[0] = 1;
+                snake.direction[1] = 0;
+            }
+
+                // snake is going left, turn right to up
+            else if(snake.direction[0] == -1 && snake.direction[1] == 0)
+            {
+                snake.direction[0] = 0;
+                snake.direction[1] = 1;
+            }
+
+                // snake is going down, turn right to left
+            else if(snake.direction[0] == 0 && snake.direction[1] == -1)
+            {
+                snake.direction[0] = -1;
+                snake.direction[1] = 0;
+            }
         }
     }
 
