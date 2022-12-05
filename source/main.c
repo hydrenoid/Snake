@@ -197,142 +197,165 @@ int checkForCollision(Snake *snake, Position food)
 
 int main()
 {
-    initializeLCDDisplay();
-    initializeUserButton();
+    initializeHardware();
 
     // initialize srand
     srand(time(NULL));
 
-    // TODO: display welcome text
-    ledDisplayText("Welcome to Snake, press button 1 to turn left and button 2 to turn right, press any button to start");
-
-    // TODO: set lcd display to 0
-    lcdDisplay(0);
-
-    // TODO: initialize snake, setting score to 0, direction to (1,0), and a array of parts 3 long
+    int replay = 1;
     Snake snake;
-    initSnake(&snake, 3);  // initially 3 elements
 
-    // TODO: insert the two tails and the head, indexOfHead is equal to 2, the head of the snake
-    // Insert the first tail
-    Position temp;
-    temp.x = 10;
-    temp.y = 10;
-    insertArray(&snake, temp);
+    // open entire loop for replaying
+    while(replay == 1)
+    {
+        // TODO: display welcome text
+        lcdDisplayText("Welcome to Snake, press button 1 to turn left and button 2 to turn right, press any button to start");
 
-    // Insert the second tail
-    temp.x = 11;
-    temp.y = 10;
-    insertArray(&snake, temp);
+        // TODO: set lcd display to 0
+        ledDisplay(0);
 
-    // Insert the starting head
-    temp.x = 12;
-    temp.y = 10;
-    insertArray(&snake, temp);
-
-    // TODO: create a piece of food somewhere on the screen
-    Position food = generateFood(&snake);
-
-    int isAlive = 1;
-
-    while(isAlive == 1) {
-        /*
-         * TODO: check for collisions, if it hits a food increase length, if not pop tail and add new head, if it hits wall
-         * or self then end game
-        */
-        int collision = checkForCollision(&snake, food);
-
-        // TODO: if the collision is 1 then it hit the wall or itself, break the game loop and display losing message
-        if (collision == 1)
+        // create a loop that waits for user input to continue
+        while(checkButton1() != 1 && checkButton2() != 1)
         {
-            ledDisplayText("GAME OVER\nPress 1 to end or 2 to play again");
-            break;
+            continue;
         }
 
-        // TODO: if the collision is -1 then it hit a food, generate a new food, update lcd and LED then continue
-        if (collision == -1)
-        {
-            food = generateFood(&snake);
-            lcdDisplay(snake.score);
-            ledDisplayUpdate(&snake, food);
+        // TODO: initialize snake, setting score to 0, direction to (1,0), and a array of parts 3 long
+
+        initSnake(&snake, 3);  // initially 3 elements
+
+        // TODO: insert the two tails and the head, indexOfHead is equal to 2, the head of the snake
+        // Insert the first tail
+        Position temp;
+        temp.x = 10;
+        temp.y = 10;
+        insertArray(&snake, temp);
+
+        // Insert the second tail
+        temp.x = 11;
+        temp.y = 10;
+        insertArray(&snake, temp);
+
+        // Insert the starting head
+        temp.x = 12;
+        temp.y = 10;
+        insertArray(&snake, temp);
+
+        // TODO: create a piece of food somewhere on the screen
+        Position food = generateFood(&snake);
+
+        int isAlive = 1;
+
+        while(isAlive == 1) {
+            /*
+             * TODO: check for collisions, if it hits a food increase length, if not pop tail and add new head, if it hits wall
+             * or self then end game
+            */
+            int collision = checkForCollision(&snake, food);
+
+            // TODO: if the collision is 1 then it hit the wall or itself, break the game loop and display losing message
+            if (collision == 1)
+            {
+                lcdDisplayText("GAME OVER\nPress 1 to end or 2 to play again");
+
+                while(checkButton1() != 1 && checkButton2() != 1)
+                {
+                    continue;
+                }
+
+                if(checkButton1() == 1)
+                {
+                    replay = 0;
+                }
+                break;
+            }
+
+            // TODO: if the collision is -1 then it hit a food, generate a new food, update lcd and LED then continue
+            if (collision == -1)
+            {
+                food = generateFood(&snake);
+                ledDisplay(snake.score);
+                lcdDisplayUpdate(&snake, food);
+            }
+
+            // TODO: if the collision is 0 then it did not hit anything, update LCD display with new snake and continue
+            if (collision == 0)
+            {
+                lcdDisplayUpdate(&snake, food);
+            }
+
+            // TODO: check if either button 1 or button 2 has been pressed, if 1 then turn left, if 2 then turn right
+            if(checkButton1() == 1)
+            {
+                printf("Turn the snake direction left\n");
+
+                // snake is going right, turn left to up
+                if(snake.direction[0] == 1 && snake.direction[1] == 0)
+                {
+                    snake.direction[0] = 0;
+                    snake.direction[1] = 1;
+                }
+
+                // snake is going up, turn left to left
+                else if(snake.direction[0] == 0 && snake.direction[1] == 1)
+                {
+                    snake.direction[0] = -1;
+                    snake.direction[1] = 0;
+                }
+
+                // snake is going left, turn left to down
+                else if(snake.direction[0] == -1 && snake.direction[1] == 0)
+                {
+                    snake.direction[0] = 0;
+                    snake.direction[1] = -1;
+                }
+
+                // snake is going down, turn left to right
+                else if(snake.direction[0] == 0 && snake.direction[1] == -1)
+                {
+                    snake.direction[0] = 1;
+                    snake.direction[1] = 0;
+                }
+
+            }
+            else if(checkButton2() == 1)
+            {
+                printf("Turn the snake direction to right");
+                // snake is going right, turn right to down
+                if(snake.direction[0] == 1 && snake.direction[1] == 0)
+                {
+                    snake.direction[0] = 0;
+                    snake.direction[1] = -1;
+                }
+
+                    // snake is going up, turn right to right
+                else if(snake.direction[0] == 0 && snake.direction[1] == 1)
+                {
+                    snake.direction[0] = 1;
+                    snake.direction[1] = 0;
+                }
+
+                    // snake is going left, turn right to up
+                else if(snake.direction[0] == -1 && snake.direction[1] == 0)
+                {
+                    snake.direction[0] = 0;
+                    snake.direction[1] = 1;
+                }
+
+                    // snake is going down, turn right to left
+                else if(snake.direction[0] == 0 && snake.direction[1] == -1)
+                {
+                    snake.direction[0] = -1;
+                    snake.direction[1] = 0;
+                }
+            }
         }
 
-        // TODO: if the collision is 0 then it did not hit anything, update LED display with new snake and continue
-        if (collision == 0)
-        {
-            ledDisplayUpdate(&snake, food);
-        }
-
-        // TODO: check if either button 1 or button 2 has been pressed, if 1 then turn left, if 2 then turn right
-        if(checkButton1() == 1)
-        {
-            printf("Turn the snake direction left\n");
-
-            // snake is going right, turn left to up
-            if(snake.direction[0] == 1 && snake.direction[1] == 0)
-            {
-                snake.direction[0] = 0;
-                snake.direction[1] = 1;
-            }
-
-            // snake is going up, turn left to left
-            else if(snake.direction[0] == 0 && snake.direction[1] == 1)
-            {
-                snake.direction[0] = -1;
-                snake.direction[1] = 0;
-            }
-
-            // snake is going left, turn left to down
-            else if(snake.direction[0] == -1 && snake.direction[1] == 0)
-            {
-                snake.direction[0] = 0;
-                snake.direction[1] = -1;
-            }
-
-            // snake is going down, turn left to right
-            else if(snake.direction[0] == 0 && snake.direction[1] == -1)
-            {
-                snake.direction[0] = 1;
-                snake.direction[1] = 0;
-            }
-
-        }
-        else if(checkButton2() == 1)
-        {
-            printf("Turn the snake direction to right");
-            // snake is going right, turn right to down
-            if(snake.direction[0] == 1 && snake.direction[1] == 0)
-            {
-                snake.direction[0] = 0;
-                snake.direction[1] = -1;
-            }
-
-                // snake is going up, turn right to right
-            else if(snake.direction[0] == 0 && snake.direction[1] == 1)
-            {
-                snake.direction[0] = 1;
-                snake.direction[1] = 0;
-            }
-
-                // snake is going left, turn right to up
-            else if(snake.direction[0] == -1 && snake.direction[1] == 0)
-            {
-                snake.direction[0] = 0;
-                snake.direction[1] = 1;
-            }
-
-                // snake is going down, turn right to left
-            else if(snake.direction[0] == 0 && snake.direction[1] == -1)
-            {
-                snake.direction[0] = -1;
-                snake.direction[1] = 0;
-            }
-        }
     }
 
     freeArray(&snake);
-    closeLCDScreen();
-    closeUserButton();
+
+    cleanupHardware();
 
     return 0;
 }

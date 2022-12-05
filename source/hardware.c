@@ -45,8 +45,12 @@ volatile int *KEY_ptr;
 
 void * virtual_base;
 
-void initializeUserButton()
+/**
+ * initialize all hardware and pointers to be used
+ */
+void initializeHardware()
 {
+    // initialize user button
     if( ( fd_USER_BUTTON = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
         printf( "ERROR: could not open \"/dev/mem\"...\n" );
 
@@ -64,36 +68,7 @@ void initializeUserButton()
 
     printf("SUCCESS");
 
-//    int x=0;
-//    for(x=0;x<100;++x){
-//        printf("Keys are: %X\n", *KEY_ptr);
-//        usleep(1*1000000);
-//        *(KEY_ptr + 3) = 0xF;
-//        *(KEY_ptr + 2) = 0xF;
-//        printf("At the End of the For Loop\n");
-//
-//
-//    }
-}
-
-
-
-void closeUserButton()
-{
-    // Clean up our memory
-    if (munmap(virtual_base_USER_BUTTON, HW_REGS_SPAN) != 0) {
-        printf("ERROR: munmap() failed...\n");
-        close(fd_USER_BUTTON);
-    }
-}
-
-/**
- * create the display so it can be manipulated later
- */
-void initializeLCDDisplay()
-{
-
-
+    // initialize LCD Display
     // map the address space for the LED registers into user space so we can interact with them.
     // we'll actually map in the entire CSR span of the HPS since we want to access various registers within that span
     if( ( fd_LCD = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 )
@@ -102,8 +77,6 @@ void initializeLCDDisplay()
     }
 
     virtual_base_LCD = mmap( NULL, HW_REGS_SPAN, ( PROT_READ | PROT_WRITE ), MAP_SHARED, fd_LCD, HW_REGS_BASE );
-
-
 
     if( virtual_base_LCD == MAP_FAILED )
     {
@@ -131,8 +104,12 @@ void initializeLCDDisplay()
     LCD_Init();
 }
 
-void closeLCDScreen()
+/**
+ * Cleans up all pointers and memory map
+ */
+void cleanupHardware()
 {
+    // clear and cleanup LCD display
     //turn off the backlight
     DRAW_Clear(&LcdCanvas, LCD_BLACK);
     DRAW_Refresh(&LcdCanvas);
@@ -146,28 +123,36 @@ void closeLCDScreen()
         close( fd_LCD );
     }
 
-    close( fd_LCD );
+
+    // cleanup user buttons
+    // Clean up our memory
+    if (munmap(virtual_base_USER_BUTTON, HW_REGS_SPAN) != 0) {
+        printf("ERROR: munmap() failed...\n");
+        close(fd_USER_BUTTON);
+    }
+
+
 }
 
 
 /**
  * Takes in a string and displays it to the center of the LED Display
  */
-void ledDisplayText(char text[])
+void lcdDisplayText(char text[])
 {
     printf("-------------\n");
 
     DRAW_Clear(&LcdCanvas, LCD_WHITE);
     DRAW_PrintString(&LcdCanvas, 40, 5, text, LCD_BLACK, &font_16x16);
     DRAW_Refresh(&LcdCanvas);
-    usleep(5 * 1000000);
+    usleep(2 * 1000000);
 }
 
 
 /**
  * Loop through the snake body and food then place all parts on screen
  */
-void ledDisplayUpdate(Snake *snake, Position food)
+void lcdDisplayUpdate(Snake *snake, Position food)
 {
     DRAW_Clear(&LcdCanvas, LCD_WHITE);
     // for now just print the x and y values of each body part and food
@@ -234,10 +219,10 @@ void ledDisplayUpdate(Snake *snake, Position food)
 
 
 
-/*
+/**
  * Read in an integer and use that integer to place correct numbers into each LCD display 1-1000's place
  */
-void lcdDisplay(int num)
+void ledDisplay(int num)
 {
     // set the 1000s spot
     printf("Display %d to 1000's LCD\n", num / 1000);
@@ -253,7 +238,7 @@ void lcdDisplay(int num)
 }
 
 
-/*
+/**
  * Check if button 1 has been pressed, if it has return 1, if not return 0
  */
 int checkButton1()
@@ -265,7 +250,7 @@ int checkButton1()
 }
 
 
-/*
+/**
  * Check if button 2 has been pressed, if it has return 1, if not return 0
  */
 int checkButton2()
