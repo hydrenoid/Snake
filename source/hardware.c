@@ -19,6 +19,7 @@
 #include "socal/hps.h"
 #include "socal/alt_gpio.h"
 #include "address_map_arm.h"
+#include <sys/mman.h>
 
 
 #define HW_REGS_BASE ( ALT_STM_OFST )
@@ -44,6 +45,16 @@ uint32_t scan_input;
 volatile int *KEY_ptr;
 
 void * virtual_base;
+
+// variables for lED/FPGA
+int open_physical(int);
+void * map_physical(int, unsigned int, unsigned int);
+void close_physical(int);
+int unmap_physical(void *, unsigned int);
+volatile unsigned int *JP1_ptr;
+
+int fd = -1;
+void *LW_virtual;
 
 /**
  * initialize all hardware and pointers to be used
@@ -131,7 +142,9 @@ void cleanupHardware()
         close(fd_USER_BUTTON);
     }
 
-
+    // cleanup LED display
+    unmap_physical(LW_virtual, LW_BRIDGE_SPAN);
+    close_physical(fd);
 }
 
 
@@ -235,6 +248,22 @@ void ledDisplay(int num)
     num = num % 10;
     // set the 1's spot
     printf("Display %d to 1's LCD\n", num / 1);
+
+    if((fd = open_physical(fd)) == -1)
+        printf("failed to initialize lcd display");
+    if((LW_virtual = map_physical(fd, LW_BRIDGE_BASE, LW_BRIDGE_SPAN)) == NULL)
+        printf("failed to initialize lcd display");
+
+    JP1_ptr = (unsigned int *) (LW_virtual + JP1_BASE);
+
+    printf("BCD 7 Segment Decoder Circuit Test\r\n");
+    *(JP1_ptr + 1) = 0x0000000F;
+
+    printf("Writing 0 thru 9 to the BCD 7 Segment Decoder circuit using GPIO[0] - [3] pins\r\n");
+
+    *(JP1_ptr + 0) = num;
+    printf("Wrote Value of %d\r\n", num);
+
 }
 
 
@@ -259,4 +288,49 @@ int checkButton2()
         return 1;
     else
         return 0;
+}
+
+/**
+ * Map the physical address for the FPGA LED to user space
+ */
+int open_physical(int fd){
+    if(fd==-1)
+        if((fd = open("/dev/mem", (O_RDWR | O_SYNC))) == -1){
+            printf("ERROR: Could not Open...");
+            return (-1);
+        }
+    return fd;
+}
+
+/**
+ * Close the physical address for the FPGA LED to user space
+ */
+void close_physical(int fd){
+    close(fd);
+}
+
+/**
+ * Map the virtual base for the LED
+ */
+void* map_physical(int fd, unsigned int base, unsigned int span){
+    void *virtual_base;
+
+    virtual_base = mmap(NULL, span, (PROT_READ | PROT_WRITE), MAP_SHARED, fd, base);
+    if(virtual_base == MAP_FAILED){
+        printf("ERROR: mmap() failed...");
+        close(fd);
+        return (NULL);
+    }
+    return virtual_base;
+}
+
+/**
+ * Unmap the virtual base for the LED
+ */
+int unmap_physical(void * virtual_base, unsigned int span){
+    if(munmap (virtual_base, span) != 0){
+        printf("ERROR: munmap failed...");
+        return(-1);
+    }
+    return 0;
 }

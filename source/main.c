@@ -7,7 +7,7 @@
 
 #define WIDTH 10
 
-/*
+/**
  * Initialize the snake with initialSize allocating memory and declaring the direction, used, size, and score
  */
 void initSnake(Snake *a, size_t initialSize) {
@@ -20,7 +20,7 @@ void initSnake(Snake *a, size_t initialSize) {
     a->indexOfHead = 2;
 }
 
-/*
+/**
  * Insert an element into the end of the array, if it runs out of space (used == space) then
  * double the size and reallocate the memory
  */
@@ -34,7 +34,7 @@ void insertArray(Snake *a, Position element) {
     a->parts[a->used++] = element;
 }
 
-/*
+/**
  * Free the memory that the array is taking part and set it pointing to NULL, reset used and size
  */
 void freeArray(Snake *a) {
@@ -44,7 +44,7 @@ void freeArray(Snake *a) {
 }
 
 
-/*
+/**
  * Generate a random position and make sure it is within the width and height of screen and not inside snake body
  */
 Position generateFood(Snake *snake)
@@ -58,6 +58,7 @@ Position generateFood(Snake *snake)
     while (condition == 0)
     {
         // generate random numbers between width and height
+        // TODO: move them up by 1 so they do not spawn at 0 so x (1-41) and y (1-20)
         temp.x = rand() % width;
         temp.y = rand() % height;
 
@@ -77,7 +78,7 @@ Position generateFood(Snake *snake)
     return temp;
 }
 
-/*
+/**
  * Using the current head and the current direction, add them together and generate a new head
  */
 Position generateNewHead(Snake *snake)
@@ -91,7 +92,7 @@ Position generateNewHead(Snake *snake)
     return temp;
 }
 
-/*
+/**
  * Replace the oldest tail with the new head of the snake, essentially popping off tail and inserting head
  */
 void noFoodUpdate(Snake *snake)
@@ -113,7 +114,7 @@ void noFoodUpdate(Snake *snake)
     }
 }
 
-/*
+/**
  * If the snake head hit food then we need to create a new array pointer with one more memory allocated to it,
  * copy the snake body into the temporary array, free the memory from the old body, set the snake body pointing to the
  * new body, add the new head, increment score, and update array variables
@@ -152,7 +153,7 @@ void foodUpdate(Snake *snake)
     snake->score++;
 }
 
-/*
+/**
  * Check if the snake head hits the walls or itself, if so return 1, if it hits food then increase length and return -1,
  * if it hits nothing then move in direction and return 0
  */
@@ -208,10 +209,10 @@ int main()
     // open entire loop for replaying
     while(replay == 1)
     {
-        // TODO: display welcome text
+        // display welcome text
         lcdDisplayText("Welcome to Snake, press button 1 to turn left and button 2 to turn right, press any button to start");
 
-        // TODO: set lcd display to 0
+        // set lcd display to 0
         ledDisplay(0);
 
         // create a loop that waits for user input to continue
@@ -220,11 +221,12 @@ int main()
             continue;
         }
 
-        // TODO: initialize snake, setting score to 0, direction to (1,0), and a array of parts 3 long
+        // initialize snake, setting score to 0, direction to (1,0), and a array of parts 3 long
 
         initSnake(&snake, 3);  // initially 3 elements
+        int score = 0;
 
-        // TODO: insert the two tails and the head, indexOfHead is equal to 2, the head of the snake
+        // insert the two tails and the head, indexOfHead is equal to 2, the head of the snake
         // Insert the first tail
         Position temp;
         temp.x = 10;
@@ -241,19 +243,19 @@ int main()
         temp.y = 10;
         insertArray(&snake, temp);
 
-        // TODO: create a piece of food somewhere on the screen
+        // create a piece of food somewhere on the screen
         Position food = generateFood(&snake);
 
         int isAlive = 1;
 
         while(isAlive == 1) {
             /*
-             * TODO: check for collisions, if it hits a food increase length, if not pop tail and add new head, if it hits wall
+             * check for collisions, if it hits a food increase length, if not pop tail and add new head, if it hits wall
              * or self then end game
             */
             int collision = checkForCollision(&snake, food);
 
-            // TODO: if the collision is 1 then it hit the wall or itself, break the game loop and display losing message
+            // if the collision is 1 then it hit the wall or itself, break the game loop and display losing message
             if (collision == 1)
             {
                 lcdDisplayText("GAME OVER\nPress 1 to end or 2 to play again");
@@ -270,21 +272,24 @@ int main()
                 break;
             }
 
-            // TODO: if the collision is -1 then it hit a food, generate a new food, update lcd and LED then continue
+            // if the collision is -1 then it hit a food, generate a new food, update lcd and LED then continue
             if (collision == -1)
             {
                 food = generateFood(&snake);
                 ledDisplay(snake.score);
                 lcdDisplayUpdate(&snake, food);
+                score = score + 1;
             }
 
-            // TODO: if the collision is 0 then it did not hit anything, update LCD display with new snake and continue
+            // if the collision is 0 then it did not hit anything, update LCD display with new snake and continue
             if (collision == 0)
             {
                 lcdDisplayUpdate(&snake, food);
             }
 
-            // TODO: check if either button 1 or button 2 has been pressed, if 1 then turn left, if 2 then turn right
+            ledDisplay(score);
+
+            // check if either button 1 or button 2 has been pressed, if 1 then turn left, if 2 then turn right
             if(checkButton1() == 1)
             {
                 printf("Turn the snake direction left\n");
