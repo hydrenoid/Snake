@@ -1,4 +1,5 @@
 # Game of Snake
+The application will be a revision of the classic game of Snake, where you control a snake going around the screen avoiding the walls and trying not to hit yourself. If you manage to eat a piece of food then your score increases and you will get a little bit longer increasing the difficulty until you lose. The hardware utilized will be two radial buttons for turning the snake and to navigate the UI, four LED 7-segment displays to display the score, and a LCD screen to display the game. The LED decoder will be built into the FPGA, and all other functions will be built in C code running on the ARM Processor. 
 
 ## Project Overview:
 <img width="449" alt="image" src="https://user-images.githubusercontent.com/82002017/226699551-ed6c9cd1-c3f7-4b5a-a85b-e6b0780ba1b8.png">
