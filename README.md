@@ -20,3 +20,5 @@ The application will be a revision of the classic game of Snake, where you contr
 <img width="665" alt="image" src="https://user-images.githubusercontent.com/82002017/226700422-a0af506c-0e62-490d-ae4e-50732d62466f.png">
 
 ## Video:
+https://user-images.githubusercontent.com/82002017/226702049-85e82b54-b343-4c71-a974-6c1e9e419eae.mov
+
